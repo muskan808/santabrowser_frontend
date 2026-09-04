@@ -65,3 +65,4 @@ Troubleshooting
 Contribution
 - Feel free to open PRs to improve UI, add tests, or harden error handling.
 
+Loom video link: https://www.loom.com/share/1e9b5a3082d94a769773c28aa446bb4f
