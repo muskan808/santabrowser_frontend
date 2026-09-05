@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchFiles, uploadFile } from '../features/files/filesSlice';
 import { logout } from '../features/auth/authSlice';
 import FileCard from '../components/FileCard';
+import { bindUploadNotifications, joinUserRoom } from '../services/socket';
 
 export default function Dashboard() {
   const dispatch = useDispatch();
@@ -12,12 +13,32 @@ export default function Dashboard() {
   const [type, setType] = useState('');
   const [tags, setTags] = useState('');
   const [selected, setSelected] = useState(null);
+  const [notice, setNotice] = useState('');
+  const noticeTimerRef = useRef(null);
 
   const search = () => dispatch(fetchFiles({ query: q, type, tag: tags }));
 
   useEffect(() => {
     dispatch(fetchFiles());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (!user?._id) return undefined;
+    joinUserRoom(user._id);
+
+    const onNotification = (payload) => {
+      const message = payload?.message || 'A file was uploaded';
+      setNotice(message);
+      if (noticeTimerRef.current) window.clearTimeout(noticeTimerRef.current);
+      noticeTimerRef.current = window.setTimeout(() => setNotice(''), 5000);
+    };
+
+    const cleanup = bindUploadNotifications(onNotification);
+    return () => {
+      cleanup();
+      if (noticeTimerRef.current) window.clearTimeout(noticeTimerRef.current);
+    };
+  }, [user?._id]);
 
   const onUpload = async (e) => {
     e.preventDefault();
@@ -83,6 +104,7 @@ export default function Dashboard() {
       </section>
 
       {error && <div className="error">{error}</div>}
+      {notice && <div className="notice">{notice}</div>}
 
       <section className="results">
         <div className="results-head">
