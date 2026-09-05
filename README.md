@@ -65,4 +65,49 @@ Troubleshooting
 Contribution
 - Feel free to open PRs to improve UI, add tests, or harden error handling.
 
+
+Real-time notifications (WebSocket)
+---------------------------------
+
+The frontend connects to the backend Socket.IO server and listens for per-user upload notifications. The relevant files are:
+
+- `src/services/socket.js` — client socket connection and helpers.
+- `src/pages/Dashboard.jsx` — calls `joinUserRoom(userId)` and binds `upload:notification` events to show a temporary notice in the UI.
+
+Event details
+- Event name: `upload:notification`
+- Payload: `{ userId, file, message }` where `file` is the newly uploaded file metadata (or `null` for test messages).
+
+Testing the flow
+
+1. Ensure `VITE_API_URL` points to the running backend (for example `http://localhost:5001/api`).
+
+2. Start both servers:
+
+```bash
+# backend
+cd backend
+npm run dev
+
+# frontend
+cd frontend
+npm run dev
+```
+
+3. Open the Dashboard and log in as a user (the client will automatically join the user's room).
+
+4. Trigger a test notification from the backend (or perform a real upload). Example curl to the dev-only debug endpoint:
+
+```bash
+curl -s -X POST -H "Content-Type: application/json" \
+	-d '{"userId":"u_test","message":"Hello from test"}' \
+	http://localhost:5001/api/debug/notify
+```
+
+5. The Dashboard will display a short notice when it receives the event.
+
+Security note
+- The debug endpoint is for development only — remove or secure it in production.
+
+
 Loom video link: https://www.loom.com/share/1e9b5a3082d94a769773c28aa446bb4f
